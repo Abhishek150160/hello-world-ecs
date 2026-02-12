@@ -1,0 +1,302 @@
+1️⃣ What Will Be Migrated?
+✅ Migrated
+
+Git code (full commit history)
+
+Pull Requests (comments, reviews, attachments)
+
+❌ Not Migrated
+
+CI/CD pipelines
+
+Branch permissions
+
+Repo settings
+
+Personal repositories
+
+Git LFS objects (need separate push later)
+
+⚠ Important Limits:
+
+100MB file limit (400MB during migration)
+
+40GB repo archive limit
+
+No delta migration (changes during migration will not sync)
+
+🏗️ 2️⃣ High-Level Migration Architecture
+4
+Flow:
+
+Bitbucket Server creates export archive
+
+Archive downloaded via SFTP/SMB
+
+Uploaded to AWS S3 / Azure Blob / GitHub storage
+
+GitHub Enterprise Importer processes archive
+
+Repo created in GitHub Cloud
+
+🧠 3️⃣ Planning Phase (Explain This to Manager First)
+Step 1: Inventory Collection
+
+Number of repositories?
+
+Pull request count?
+
+Repo sizes?
+
+LFS usage?
+
+Step 2: Decide Structure in GitHub
+
+Create 1 Enterprise account
+
+Create few Organizations
+
+Use Teams for access control
+
+⚠ Do NOT create one org per Bitbucket project blindly.
+
+Step 3: Choose Migration Owner
+
+Person must:
+
+Be GitHub Org Owner OR Migrator role
+
+Bitbucket Admin/Super Admin
+
+Have SFTP (Linux) or SMB (Windows) access
+
+🔐 4️⃣ Access Requirements
+GitHub Side
+
+Need:
+
+Personal Access Token (classic)
+
+Scopes:
+
+repo
+
+admin:org
+
+workflow
+
+If SAML enabled → Authorize token.
+
+Bitbucket Side
+
+Need:
+
+Admin credentials
+
+SSH private key (no passphrase)
+
+SFTP access (Linux)
+OR SMB (Windows)
+
+🧪 5️⃣ Always Do Trial Migration First (Very Important)
+
+Explain this clearly to manager:
+
+We will first migrate to a test organization (-sandbox)
+Validate everything
+Then do production migration
+
+No downtime required for trial.
+
+🛠️ 6️⃣ Technical Steps – Step by Step
+✅ Step 1: Install GitHub CLI
+gh --version
+
+
+Install extension:
+
+gh extension install github/gh-bbs2gh
+gh extension upgrade github/gh-bbs2gh
+
+✅ Step 2: Set Environment Variables
+export GH_PAT="your_token"
+export BBS_USERNAME="bitbucket_admin"
+export BBS_PASSWORD="password"
+
+
+If GHE.com:
+
+export TARGET_API_URL="https://api.company.ghe.com"
+
+✅ Step 3: Setup Blob Storage
+
+Choose one:
+
+Option A: AWS S3
+
+Create bucket
+Add required IAM permissions
+Set:
+
+export AWS_ACCESS_KEY_ID=
+export AWS_SECRET_ACCESS_KEY=
+export AWS_REGION=
+
+Option B: Azure Blob
+
+Set:
+
+export AZURE_STORAGE_CONNECTION_STRING=
+
+Option C: GitHub Storage (Easy Option)
+
+Use:
+
+--use-github-storage
+
+✅ Step 4: Migrate Single Repository
+gh bbs2gh migrate-repo \
+  --bbs-server-url https://bitbucket.company.com \
+  --bbs-project PROJ \
+  --bbs-repo myrepo \
+  --github-org company-org \
+  --github-repo myrepo \
+  --ssh-user sshuser \
+  --ssh-private-key ~/.ssh/id_rsa \
+  --aws-bucket-name mybucket
+
+
+OR use:
+
+--use-github-storage
+
+✅ Step 5: Validate Migration
+
+After success:
+
+Check repo code
+
+Check PRs
+
+Check commit history
+
+Review migration logs
+
+📦 7️⃣ Migrating Multiple Repositories
+
+Generate script:
+
+gh bbs2gh generate-script \
+  --bbs-server-url https://bitbucket.company.com \
+  --github-org company-org \
+  --output migration.ps1
+
+
+Run script:
+
+./migration.ps1
+
+👥 8️⃣ Post Migration Tasks (Very Important)
+1️⃣ Set Repository Visibility
+
+Repos become PRIVATE by default.
+
+2️⃣ Configure Teams & Permissions
+
+Bitbucket permissions are NOT migrated.
+
+Create:
+
+Frontend Team
+
+Backend Team
+
+DevOps Team
+
+Assign repo access.
+
+3️⃣ Reclaim Mannequins
+
+All PR authors become placeholder users.
+
+Org Owner must reclaim them.
+
+4️⃣ Reconfigure:
+
+Branch protection rules
+
+CI/CD (GitHub Actions or other)
+
+Webhooks
+
+Secrets
+
+📊 9️⃣ Migration Timeline Strategy (Manager Explanation)
+Small Setup:
+
+<100 repos
+
+<5k PRs
+→ 1–2 weeks
+
+Large Enterprise:
+
+500+ repos
+
+100k+ PRs
+→ Batch migration
+→ 1–3 months
+
+🎯 10️⃣ Recommended Enterprise Migration Strategy
+
+Planning & Inventory (1 week)
+
+Trial Migration (1 week)
+
+Fix Issues
+
+Production Migration (Weekend batches)
+
+Post Migration Hardening
+
+🚨 Important Risks to Explain
+Risk	Mitigation
+Large repo failure	Clean history
+LFS missing	Push LFS manually
+Permission mismatch	Pre-design teams
+Changes during migration	Freeze window
+🧾 How To Present to Manager (Short Summary Slide Format)
+
+You can explain like this:
+
+We will migrate repository-by-repository using GitHub Enterprise Importer.
+First we do trial migration into sandbox.
+Then validate.
+Then batch production migration using CLI automation.
+After migration we configure permissions, teams, branch rules, and CI/CD.
+
+✅ Final Clear Step Summary
+
+Collect repo inventory
+
+Prepare GitHub org structure
+
+Assign migrator role
+
+Create PAT token
+
+Setup blob storage
+
+Install GitHub CLI + extension
+
+Run trial migration
+
+Validate
+
+Run production migration
+
+Configure teams & permissions
+
+Reclaim mannequins
+
+Reconfigure CI/CD
