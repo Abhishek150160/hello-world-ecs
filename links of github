@@ -1,0 +1,35 @@
+Sl. No	Learning Path	Duration	Source	Timeframe	Module Name	HyperLink	
+1	GitHub Actions: GH-200				Pre-assessment	Nil	Why these are ideal: Combined, they cover all key domains of the GH‑200 certification: author/maintain workflows, actions, and enterprise management.
+		1h 35m	Pluralsight	2 days	Getting Started with GitHub Actions	Getting Started with GitHub Actions | Pluralsight	
+		30m	MS Learn	1 day	Introduction to GitHub Actions	https://learn.microsoft.com/en-us/training/modules/introduction-to-github-actions/	
+		3h 41m	MS Learn	4 days	Automate your workflow with GitHub Actions (Part 1 of 2)	https://learn.microsoft.com/en-us/training/paths/github-actions/	
+					Interim assessment	Nil	
+		2h 18m	MS Learn	3 days	Automate your workflow with GitHub Actions (Part 2 of 2)	https://learn.microsoft.com/en-us/training/paths/github-actions-2/	
+		~	MS Learn	1 day	Study guide for GH-200: GitHub Actions	https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-200	
+		~	GitHub Learn	1 day	GitHub Actions preparation guide	github-certification-preparation-guide/content/exams/github-actions.md at main · 12zamu/github-certification-preparation-guide · GitHub	
+		~	MS Learn	1 day	Practice Assessment for GH-200: GitHub Actions	https://learn.microsoft.com/en-us/credentials/certifications/github-actions/practice/assessment?assessment-type=practice&assessmentId=1001&practice-assessment-type=certification&source=docs	
+					Final assessment	Nil	
+							
+2	GitHub Administration: GH-100				Pre-assessment	Nil	Why these are ideal: These collectively address GH‑100 domains like governance, identity, enterprise operations, and workflow management.
+		36m	MS Learn	1 day	Introduction to GitHub administration	https://learn.microsoft.com/en-us/training/modules/github-introduction-administration/	
+		3h 28m	MS Learn	4 days	GitHub fundamentals - Administration basics and product features (Part 1 of 2)	https://learn.microsoft.com/en-us/training/paths/github-administration-products/	
+					Interim assessment	Nil	
+		5h 6m	MS Learn	6 days	GitHub fundamentals - Administration basics and product features (Part 2 of 2)	https://learn.microsoft.com/en-us/training/paths/github-admin-2/github-admin-2	
+		~	MS Learn	1 day	Study guide for GH-100: GitHub Administration	Study guide for GH-100: GitHub Administration | Microsoft Learn	
+		~	GitHub Learn	1 day	GitHub Administration preparation guide	github-certification-preparation-guide/content/exams/github-administration.md at main · 12zamu/github-certification-preparation-guide · GitHub	
+		~	MS Learn	1 day	Practice Assessment for GH-100: GitHub Administration	https://learn.microsoft.com/en-us/credentials/certifications/github-administration/practice/assessment?assessment-type=practice&assessmentId=1841205577&practice-assessment-type=certification	
+					Final assessment	Nil	
+		~ 9h 10m					
+3	GitHub Advanced Security: GH-500				Pre-assessment	Nil	Why these are ideal: These resources provide full coverage of core GHAS features - perfect for preparing for GH-500.
+		26m	MS Learn	1 day	Introduction to GitHub Advanced Security	https://learn.microsoft.com/en-us/training/modules/introduction-github-advanced-security/	
+		1h 15m	GitHub Learn	2 days	Essentials of GitHub Advanced Security	GitHub Advanced Security essential guides and tutorials - GitHub Resources	
+		21m	MS Learn	1 day	GitHub administration for GitHub Advanced Security	https://learn.microsoft.com/en-us/training/modules/github-administration-github-advanced-security/	
+		2h 3m	MS Learn	2 days	GitHub Advanced Security (Part 1 of 2)	https://learn.microsoft.com/en-us/training/paths/github-advanced-security/	
+					Interim assessment	Nil	
+		3h 51m	MS Learn	4 days	GitHub Advanced Security (Part 2 of 2)	https://learn.microsoft.com/en-us/training/paths/github-advanced-security-2	
+		1h 30m	GitHub Learn	2 days	Intermediate GitHub Advanced Security	GitHub Advanced Security intermediate level guides and tutorials - GitHub Resources	
+		1h	GitHub Learn	1 day	Advanced GitHub Advanced Security	Advanced guides and tutorials on GitHub Advanced Security - GitHub Resources	
+		~	MS Learn	1 day	Study guide for GH-500: GitHub Advanced Security	https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-500	
+		~	GitHub Learn	1 day	GitHub Advanced Security preparation guide	github-certification-preparation-guide/content/exams/github-advanced-security.md at main · 12zamu/github-certification-preparation-guide · GitHub	
+		~	MS Learn	1 day	Practice Assessment for GH-500: GitHub Advanced Security	https://learn.microsoft.com/en-us/credentials/certifications/github-advanced-security/practice/assessment?assessment-type=practice&assessmentId=590484996&practice-assessment-type=certification	
+					Final assessment	Nil	
