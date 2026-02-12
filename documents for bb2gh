@@ -1,0 +1,841 @@
+Skip to main content
+GitHub Docs
+
+Migrations/GitHub Enterprise Importer/Migrate from Bitbucket Server/About migrations
+About migrations from Bitbucket Server to GitHub Enterprise Cloud
+Learn which data GitHub Enterprise Importer can migrate.
+
+In this article
+About migrations from Bitbucket Server
+You can use GitHub Enterprise Importer to migrate repositories from Bitbucket Server to GitHub Enterprise Cloud (GitHub.com or GHE.com). Migrations from Bitbucket Server are only supported for Bitbucket Server or Bitbucket Data Center version 5.14+ or higher.
+
+Data that is migrated
+We currently only support migrating the following repository data from Bitbucket Server to GitHub Enterprise Cloud.
+
+Git source (including commit history)
+
+Pull requests (including comments, pull request reviews, pull request review comments at the file and line level, required reviewers, and attachments)
+
+Note
+
+Users may receive a 500 error when attempting to view a pull request, if the pull request was merged and the head branch deleted on Bitbucket Server prior to migration. Bitbucket Server removes specific Git references to objects for such pull requests, and consequently those Git objects associated with the pull request are unable to be migrated.
+
+Data that is not migrated
+Currently, the following data is not migrated.
+
+Personal repositories owned by users
+Branch permissions
+Commit comments
+Repository settings
+CI pipelines
+Limitations on migrated data
+There are limits to what GitHub Enterprise Importer can migrate. Some are due to limitations of GitHub, while others are limitations of GitHub Enterprise Importer itself.
+
+Limitations of GitHub
+2 GiB size limit for a single Git commit: No single commit in your Git repository can be larger than 2 GiB. If any of your commits are larger than 2 GiB, you will need to split the commit into smaller commits that are each 2 GiB or smaller.
+255 byte limit for Git references: No single Git reference, commonly known as a "ref", can have a name larger than 255 bytes. Usually, this means that your references cannot be more than 255 characters long, but any non-ASCII characters, such as emojis, may consume more than one byte. If any of your Git references are too large, we'll return a clear error message.
+100 MiB file size limit: After you complete your migration, no single file in your Git repository can be larger than 100 MiB. During repository migration this limit is increased to 400 MiB. Consider using Git LFS to store large files. For more information, see Managing large files.
+Limitations of GitHub Enterprise Importer
+40 GiB size limit for repository archives (public preview): The Importer cannot migrate repositories with more than 40 GiB of combined git data and metadata in the repository archive.
+400 MiB file size limit: When migrating a repository with GitHub Enterprise Importer, no single file in your Git repository can be larger than 400 MiB. Consider using Git LFS for storing large files. For more information, see Managing large files.
+Git LFS objects not migrated: The Importer can migrate repositories that use Git LFS, but the LFS objects themselves will not be migrated. They can be pushed to your migration destination as a follow-up task after the migration is complete. For more information, see Duplicating a repository.
+Follow-up tasks required: When migrating between GitHub products, certain settings are not migrated and must be reconfigured in the new repository. For a list of follow-up tasks you'll need to complete after each migration, see Overview of a migration between GitHub products.
+Delayed code search functionality: Re-indexing the search index can take a few hours after a repository is migrated, and code searches may return unexpected results until re-indexing is complete.
+Rulesets configured for your organization can cause migrations to fail: For example, if you configured a rule that requires email addresses for commit authors to end with @monalisa.cat, and the repository you're migrating contains commits that don't comply with this rule, your migration will fail. For more information about rulesets, see About rulesets.
+Mannequin content might not be searchable: Mannequins are placeholder users to which imported content (such as issues, pull requests, comments, etc.) is associated. When you search for content associated with a mannequin, such as assigned issues, the issues may not be found. Once a mannequin is reclaimed, the content should be found via the new owner. For more information, see Reclaiming mannequins for GitHub Enterprise Importer.
+Getting started
+Before you migrate from Bitbucket Server, you should plan out how you will run your migration. Before migrating any data, you will need to choose someone to run the migration. You must grant that person the necessary access for both the source and the destination of the migration. We also recommend you run a trial migration first.
+
+For an overview of the migration process from beginning to end, see Overview of a migration from Bitbucket Server to GitHub Enterprise Cloud.
+
+Help and support
+Did you find what you needed?
+
+Privacy policy
+Help us make these docs great!
+All GitHub docs are open source. See something that's wrong or unclear? Submit a pull request.
+
+Learn how to contribute
+
+Still need help?
+Ask the GitHub community
+Contact support
+Legal
+© 2026 GitHub, Inc.
+Terms
+Privacy
+Status
+Pricing
+Expert services
+Blog
+About migrations from Bitbucket Server to GitHub Enterprise Cloud - GitHub Docs
+1st page 
+Skip to main content
+GitHub Docs
+
+Migrations/GitHub Enterprise Importer/Migrate from Bitbucket Server/Overview of a migration
+Overview of a migration from Bitbucket Server to GitHub Enterprise Cloud
+Learn about the process of migrating from Bitbucket Server to GitHub with GitHub Enterprise Importer, from planning to implementation to completing follow-up tasks.
+
+In this article
+Overview
+With GitHub Enterprise Importer, you can migrate to GitHub Enterprise Cloud on a repository-by-repository basis. For more information, see About GitHub Enterprise Importer.
+
+If you're migrating from Bitbucket Server, you can use this guide to plan and implement your migration and complete follow-up tasks.
+
+Planning your migration
+To plan your migration, ask yourself the following questions.
+
+How soon do we need to complete the migration?
+Do we understand what will be migrated?
+Who will run the migration?
+What organizational structure do we want in GitHub?
+How soon do we need to complete the migration?
+Determine your timeline, which will largely dictate your approach. The first step for determining your timeline is to get an inventory of what you need to migrate.
+
+Number of repositories
+Number of pull requests
+Migration timing is largely based on the number of pull requests in a repository. If you want to migrate 1,000 repositories, and each repository has 100 pull requests on average, and only 50 users have contributed to the repositories, your migration will likely be very quick. If you want to migrate only 100 repositories, but the repositories each have 75,000 pull requests on average, and 5,000 users, the migration will take much longer and require much more planning and testing.
+
+After you take inventory of the repositories you need to migrate, you can weigh your inventory data against your desired timeline. If your organization can withstand a higher degree of change, then you might be able to migrate all your repositories at once, completing your migration efforts in a few days. However, you may have various teams that are not able to migrate at the same time. In this case, you might want to batch and stagger your migrations to fit the teams' timelines, extending your migration effort.
+
+Determine how many repositories and pull requests you need to migrate.
+To understand when teams can be ready to migrate, interview stakeholders.
+Fully review the rest of this guide, then decide on a migration timeline.
+Do we understand what will be migrated?
+Ensure that you and your stakeholders understand what data can be migrated by GitHub Enterprise Importer.
+
+For migrations from Bitbucket Server, GitHub Enterprise Importer only migrates Git repositories and pull requests. Any other assets, such as CI pipelines, will remain in Bitbucket Server.
+
+Because permissions work differently in GitHub than in Bitbucket Server, GitHub Enterprise Importer does not attempt to migrate repository permissions from Bitbucket Server. For more information, see Configuring permissions.
+
+Review the data that's migrated from Bitbucket Server. For more information, see About migrations from Bitbucket Server to GitHub Enterprise Cloud.
+Make a list of any data that you'll need to manually migrate or recreate.
+Who will run the migration?
+To migrate a repository, you must be an organization owner for the destination organization in GitHub, or an organization owner must grant you the migrator role.
+
+You must also have required permissions and access to your Bitbucket Server instance:
+
+Admin or super admin permissions
+If your Bitbucket Server instance runs Linux, SFTP access to the instance, using a supported SSH private key (see Managing access for a migration from Bitbucket Server)
+If your Bitbucket Server instance runs Windows, file sharing (SMB) access to the instance
+Decide whether you want an organization owner of the destination organization to perform your migrations, or whether you need to grant the migrator role to someone else.
+If you chose to grant the migrator role, decide which person or team you'll grant the role to.
+Grant the migrator role to the person or team. For more information, see Managing access for a migration from Bitbucket Server.
+Confirm that the person has correctly configured personal access tokens to meet all the access requirements. For more information, see Managing access for a migration from Bitbucket Server.
+Confirm the migrator has admin or super admin permissions and SFTP access for your Bitbucket Server instance.
+What organizational structure do we want in GitHub?
+Next, plan the organizational structure you'll create in GitHub.
+
+In Bitbucket Server, repositories are grouped into projects. In GitHub, repositories are owned by organizations. However, you should not assume that the best approach is to create one organization in GitHub per project in Bitbucket Server.
+
+After migrating to GitHub, you should have only one enterprise account and a small number of organizations owned by that enterprise.
+
+Each migrated repository will be owned by one of these organizations, which may result in a large list of ungrouped repositories within each organization. However, you can manage access to groups of repositories by creating teams on GitHub. For more information, see About organization teams.
+
+If you want to break your migration effort into batches, consider batching by organization.
+
+Decide what your new organization structural will be.
+Decide if you need to break up your migration effort into smaller batches.
+If so, decide how you want to break up your migrations.
+Running your migrations
+After you complete your planning, you can start the actual migrations. To help uncover problems that might be unique to your enterprise during and after the migration, we highly recommend performing trial runs of all migrations. After resolving any issues uncovered by the trial runs, you can run your production migrations.
+
+Trial migrations help you determine several critical pieces of information.
+
+Whether the migration for a given repository can complete successfully
+Whether you can get the repository back to a state where your users can successfully start working
+How long a migration will take to run, which is useful for planning migration schedules and setting stakeholder expectations
+Trial runs do not require much time coordination. GitHub Enterprise Importer never requires downtime for users of a repository being migrated. However, we recommend halting work during production migrations to ensure that new data isn't created during the migration, which would then be missing from the migrated repository. This isn't a concern for trial migrations, so trial runs can take place at any time. To reduce the time it takes to complete your trial migrations, you can schedule the batches for your trial runs back-to-back. Users of those repositories can then validate the results on their own time.
+
+We recommend creating a test organization to use as a destination for your trial migrations. You can use a single organization for all trial runs, or you can create one test organization for each intended destination organization. Consider including -sandbox at the end of the organization names, to clarify that the organizations are intended only for migration validation and not for production. You can delete the test organizations after you're done.
+
+Create a test organization for your trial migrations.
+Run the trial migrations.
+Complete the follow-up tasks described below for the trial migrations.
+Ask users to validate the results of the migrations.
+Resolve any issues uncovered by your trial migrations.
+If your destination uses IP allow lists, configure the list to allow access by GitHub Enterprise Importer. For more information, see Managing access for a migration from Bitbucket Server.
+Run your production migrations. For more information, see Migrating repositories from Bitbucket Server to GitHub Enterprise Cloud.
+Optionally, delete the test organization.
+Completing follow-up tasks
+After each migration has finished, you will need to complete some additional tasks before the repository is ready for work.
+
+Checking the migration status
+Reviewing the migration log
+Setting repository visibility
+Configuring permissions
+Reclaiming mannequins
+Configuring IP allow lists
+Checking the migration status
+First, check whether your migration succeeded or failed.
+
+The way you check the status of your migration depends on how you ran the migration.
+
+If you ran the migration using the GitHub CLI, by default, the process will display whether the migration succeeded or failed once the migration is complete. If the migration failed, you will see the reason for failure.
+
+Migration completed (ID: RM_123)! State: SUCCEEDED
+If you ran the migration using the GitHub CLI with the optional --queue-only argument, the process will exit immediately after queueing the migration, and will not tell you if the migration succeeded or failed. You can check a migration's status using the wait-for-migration command, or by reviewing the migration log.
+
+If you ran the migration using the GraphQL API, you can query the state and failureReason fields on the RepositoryMigration object.
+
+If the migration failed, the migration log may contain additional information about the cause of the failure. For more information, see Reviewing the migration log.
+
+Reviewing the migration log
+Review the migration log for each migrated repository. For more information, see Accessing your migration logs for GitHub Enterprise Importer.
+
+If the migration failed, the log may contain additional information about the cause of the failure.
+
+If the migration succeeded, there may be warnings in the migration log representing specific pieces of data (for example pull requests, issues, or comments) which were not migrated or were migrated with caveats.
+
+For more information on understanding migration warnings, see Troubleshooting your migration with GitHub Enterprise Importer. After reviewing any migration warnings, you will need to make a decision about whether you can accept those warnings and move forward.
+
+Setting repository visibility
+All repositories are migrated as private by default, and only the user that ran the migration and organization owners will have access to the repository. If you don't want the repository to be private, change the visibility.
+
+You can set a repository's visibility with the --target-repo-visibility CLI option or the targetRepoVisibility GraphQL property.
+You can change a repository's visibility in the browser. For more information, see Setting repository visibility.
+Alternatively, you can use GitHub CLI to change repository visibility from the command line. You can even add this command to the script that was generated to run your migrations. For more information, see gh repo edit in the GitHub CLI documentation.
+Configuring permissions
+Because permissions work differently in GitHub than in Bitbucket Server, GitHub Enterprise Importer does not attempt to migrate repository permissions from Bitbucket Server.
+
+To give access to migrated repositories, you can create teams and give each team access to the repository.
+
+Create teams. For more information, see Creating an organization team.
+Add organization members to teams. For more information, see Adding organization members to a team.
+Give each team access to the repository. For more information, see Managing team access to an organization repository.
+Reclaiming mannequins
+After you run a migration with GitHub Enterprise Importer, all user activity in the migrated repository (except Git commits) is attributed to placeholder identities called mannequins.
+
+You can reattribute the history for each mannequin to an organization member with the GitHub CLI or in your browser. If you use the GitHub CLI, you can reclaim mannequins in bulk. For more information, see Reclaiming mannequins for GitHub Enterprise Importer.
+
+Note
+
+Only organization owners can reclaim mannequins. If you've been granted the migrator role, contact an organization owner to perform this step.
+
+Decide if you want to reclaim mannequins.
+Plan when you'll complete reclaims.
+Reclaim mannequins.
+If any of the members do not already have appropriate access to the repository via team membership, give the members access to the repository. For more information, see Managing an individual's access to an organization repository.
+Configuring IP allow lists
+If you added the IP ranges for GitHub Enterprise Importer to the IP allow list for your destination organization, you can remove those entries. If you disabled your identity provider's IP allow list restrictions for your destination enterprise, you can re-enable them now.
+
+For more information, see Managing access for a migration from Bitbucket Server.
+
+Help and support
+Did you find what you needed?
+
+Privacy policy
+Help us make these docs great!
+All GitHub docs are open source. See something that's wrong or unclear? Submit a pull request.
+
+Learn how to contribute
+
+Still need help?
+Ask the GitHub community
+Contact support
+Legal
+© 2026 GitHub, Inc.
+Terms
+Privacy
+Status
+Pricing
+Expert services
+Blog
+Overview of a migration from Bitbucket Server to GitHub Enterprise Cloud - GitHub Docs
+2nd page
+Skip to main content
+GitHub Docs
+
+Migrations/GitHub Enterprise Importer/Migrate from Bitbucket Server/Manage access
+Managing access for a migration from Bitbucket Server
+Before you use GitHub Enterprise Importer, make sure you have appropriate access to both the source and destination of your migration.
+
+In this article
+About required access for GitHub Enterprise Importer
+To protect your data, GitHub enforces specific access requirements to use GitHub Enterprise Importer. These requirements vary based on the task you are trying to perform. To prevent errors, you should review this article carefully and verify that you meet all of the requirements for the task you want to complete.
+
+To migrate a repository from Bitbucket Server to GitHub, you need sufficient access to both the source (your Bitbucket Server instance) and the destination (an organization on GitHub). To have sufficient access, you'll need all of the following things.
+
+A required role in the destination organization on GitHub
+A personal access token that can access the destination organization on GitHub
+The personal access token must have all the required scopes, which depend on your role and the task you want to complete.
+If the destination organization uses SAML single sign-on for GitHub, you must authorize the personal access token for SSO.
+On Bitbucket Server, required permissions and SFTP or SMB access
+Additionally, if you use IP allow lists in the destination organization, you may need to configure the allow lists to allow access by GitHub Enterprise Importer.
+
+About the migrator role
+To remove the need for organization owners to complete migrations, GitHub includes a distinct role for using GitHub Enterprise Importer.
+
+Granting the migrator role allows you to designate other teams or individuals to handle your migrations.
+
+You can only grant the migrator role for an organization on GitHub.com or GHE.com.
+You can grant the migrator role to an individual user or a team. We strongly recommend that you assign the migrator role to a team. Then, you can further customize who can run a migration by adjusting team membership. See Adding organization members to a team or Removing organization members from a team.
+The migrator must use a personal access token that meets all the requirements for running migrations.
+Warning
+
+When you grant the migrator role in an organization to a user or team, you are granting them the ability to import or export any repository in that organization.
+
+To grant the migrator role, see Granting the migrator role.
+
+
+Required roles for GitHub
+For the destination organization on GitHub, different roles are required for different tasks.
+
+The following table lists which tasks can be performed by which role.
+
+Task	Organization owner	Migrator
+Assigning the migrator role for repository migrations		
+Running a repository migration		
+Downloading a migration log		
+Reclaiming mannequins		
+Required scopes for personal access tokens
+To run a migration, you need a personal access token that can access the destination organization on GitHub.
+
+The scopes that are required for your GitHub personal access token (classic) depend on your role and the task you want to complete.
+
+Note
+
+You can only use a personal access token (classic), not a fine-grained personal access token. This means that you cannot use GitHub Enterprise Importer if your organization uses the "Restrict personal access tokens (classic) from accessing your organizations" policy. For more information, see Enforcing policies for personal access tokens in your enterprise.
+
+Task	Organization owner	Migrator
+Assigning the migrator role for repository migrations	admin:org	
+Running a repository migration (destination organization)	repo, admin:org, workflow	repo, read:org, workflow
+Downloading a migration log	repo, admin:org, workflow	repo, read:org, workflow
+Reclaiming mannequins	admin:org	
+Required permissions for Bitbucket Server
+To migrate from Bitbucket Server, you need:
+
+The username and password of a Bitbucket Server account that has admin or super admin permissions
+If your Bitbucket Server instances runs on Linux, SFTP access to the Bitbucket Server instance (see SSH keys). In general, if you can access the server via SSH, then you can also use SFTP.
+If your Bitbucket Server instance runs on Windows, file sharing (SMB) access to the Bitbucket Server instance
+SSH keys
+If your Bitbucket Server instance runs on Linux, you must use an SSH key that meets the following requirements:
+
+Does not have a passphrase
+Uses one of the following ciphers
+aes256-ctr
+3des-cbc
+aes128-cbc
+aes192-cbc
+aes256-cbc
+blowfish-cbc
+twofish-cbc
+twofish192-cbc
+twofish128-cbc
+twofish256-cbc
+arcfour
+arcfour128
+arcfour256
+cast128-cbc
+aes128-ctr
+aes192-ctr
+If you receive an error like cipher name aes256-ctr for openssh key file is not supported when running a migration, your SSH private key uses an unsupported cipher. For more information about how to generate a compatible private key, see Troubleshooting your migration with GitHub Enterprise Importer.
+
+Granting the migrator role
+To allow someone other than an organization owner to run a migration or download migration logs, you can grant the migrator role to a user or team. For more information, see About the migrator role.
+
+You can grant the migrator role using either the BBS2GH extension of the GitHub CLI or the GraphQL API.
+
+Granting the migrator role with the BBS2GH extension
+Granting the migrator role with the GraphQL API
+Granting the migrator role with the BBS2GH extension
+To grant the migrator role using the CLI, you must have installed the BBS2GH extension of the GitHub CLI. For more information, see Migrating repositories from Bitbucket Server to GitHub Enterprise Cloud.
+
+On GitHub, create and record a personal access token that meets all the requirements for granting the migrator role. For more information, see Creating a personal access token for GitHub Enterprise Importer.
+
+Set the personal access token as an environment variable, replacing TOKEN in the commands below with the personal access token you recorded above.
+
+If you're using Terminal, use the export command.
+
+Shell
+export GH_PAT="TOKEN"
+If you're using PowerShell, use the $env command.
+
+Shell
+$env:GH_PAT="TOKEN"
+Use the gh bbs2gh grant-migrator-role command, replacing ORGANIZATION with the organization you want to grant the migrator role for, ACTOR with the user or team name, and TYPE with USER or TEAM.
+
+Shell
+gh bbs2gh grant-migrator-role --github-org ORGANIZATION --actor ACTOR --actor-type TYPE
+Note
+
+If you're the granting the migrator role for GHE.com, you must also include the target API URL for your enterprise's subdomain. For example: --target-api-url https://api.octocorp.ghe.com.
+
+Granting the migrator role with the GraphQL API
+You can use the grantMigratorRole GraphQL mutation to assign the migrator role and the revokeMigratorRole mutation to revoke the migrator role.
+
+You must use a personal access token (PAT) that meets all access requirements. For more information, see the Required scopes for personal access tokens.
+
+grantMigratorRole mutation
+This GraphQL mutation sets the migration role.
+
+mutation grantMigratorRole (
+  $organizationId: ID!,
+  $actor: String!,
+  $actor_type: ActorType!
+) {
+  grantMigratorRole( input: {
+    organizationId: $organizationId,
+    actor: $actor,
+    actorType: $actor_type
+  })
+   { success }
+}
+Query variable	Description
+organizationId	The ownerId (or organization ID) for your organization, from the GetOrgInfo query.
+actor	The team or username who you want to assign the migration role to.
+actor_type	Specify whether the migrator is a USER or TEAM.
+revokeMigratorRole mutation
+This mutation removes the migrator role.
+
+mutation revokeMigratorRole (
+  $organizationId: ID!,
+  $actor: String!,
+  $actor_type: ActorType!
+) {
+  revokeMigratorRole( input: {
+    organizationId: $organizationId,
+    actor: $actor,
+    actorType: $actor_type
+  })
+   { success }
+}
+Creating a personal access token for GitHub Enterprise Importer
+Verify that you have a sufficient role for the task you want to complete. For more information, see Required roles.
+Create a personal access token (classic), making sure to grant all the scopes required for the task you want to complete. You can only use a personal access token (classic), not a fine-grained personal access token. For more information, Managing your personal access tokens and Required scopes for personal access token.
+If SAML single sign-on is enforced for the organization(s) you need to access, authorize the personal access token for SSO. For more information, see Authorizing a personal access token for use with single sign-on.
+Configuring IP allow lists for migrations
+If the destination of your migration uses an IP allow list (either GitHub's IP allow list feature or your identity provider's (IdP) IP allow list restrictions), you need to configure IP allow lists on GitHub.
+
+If you use GitHub's IP allow list feature, you must add the GitHub IP ranges below to the allow list for the destination organization.
+If you use your IdP's IP allow list to restrict access to your enterprise on GitHub, you should disable these restrictions in your enterprise account settings until after your migration is complete.
+For more information, see Managing allowed IP addresses for your organization and Restricting network traffic to your enterprise with an IP allow list.
+
+IP ranges for GitHub.com
+You'll need to add the following IP ranges to your IP allow list(s):
+
+192.30.252.0/22
+185.199.108.0/22
+140.82.112.0/20
+143.55.64.0/20
+135.234.59.224/28 (Note: Introduced July 28, 2025)
+2a0a:a440::/29
+2606:50c0::/32
+20.99.172.64/28 (Note: Introduced July 28, 2025)
+You can get an up-to-date list of IP ranges used by GitHub Enterprise Importer at any time with the "Get GitHub meta information" endpoint of the REST API.
+
+The github_enterprise_importer key in the response contains a list of IP ranges used for migrations.
+
+For more information, see REST API endpoints for meta data.
+
+Virtual network firewall rules for Azure Blob Storage for GitHub.com
+Customers with Azure Blob Storage configured for storing repository data for migrations must add virtual network firewall rules to their storage accounts to allow GEI to access the repository data. This requires the use of the Azure CLI or PowerShell, as adding these virtual network firewall rules on the Azure Portal is currently unsupported. The following virtual network subnet IDs must be added to the virtual network firewall rules for your storage account:
+
+/subscriptions/cdf1c65c-e6f4-43b3-945f-c5280f104f9c/resourceGroups/ghr-network-service-1a72ec6f-45b6-44be-a4bd-f0fe50079c9f-5-westus2/providers/Microsoft.Network/virtualNetworks/1a72ec6f-45b6-44be-a4bd-f0fe50079c9f-5/subnets/1a72ec6f-45b6-44be-a4bd-f0fe50079c9f-5
+/subscriptions/173ad082-b20d-4d44-8257-7fbf34959bed/resourceGroups/ghr-network-service-1a72ec6f-45b6-44be-a4bd-f0fe50079c9f-5-westus3/providers/Microsoft.Network/virtualNetworks/1a72ec6f-45b6-44be-a4bd-f0fe50079c9f-5/subnets/1a72ec6f-45b6-44be-a4bd-f0fe50079c9f-5
+To add the virtual network firewall rules to your Azure Storage account, you can follow step 5 in the documentation for creating a virtual network rule for Azure Storage using the network subnet IDs provided above. Be sure to provide the --subscription argument with the subscription ID tied to the storage account.
+
+IP ranges for GHE.com
+You must allow:
+
+Ranges required for everyone
+Additional ranges that depend on your data residency region
+For the ranges to add, see Network details for GHE.com.
+
+In addition, if you are using a blob storage account with firewall rules:
+
+You must allow access to the egress IP ranges for GHE.com. See Network details for GHE.com.
+If you are using Azure Blob Storage you may need to perform some additional network configuration. This may occur if your Azure Blob Storage happens to be located in the same region as the GitHub Enterprise Importer service's compute. Please contact GitHub Support.
+Further reading
+Roles in an organization
+Help and support
+Did you find what you needed?
+
+Privacy policy
+Help us make these docs great!
+All GitHub docs are open source. See something that's wrong or unclear? Submit a pull request.
+
+Learn how to contribute
+
+Still need help?
+Ask the GitHub community
+Contact support
+Legal
+© 2026 GitHub, Inc.
+Terms
+Privacy
+Status
+Pricing
+Expert services
+Blog
+Managing access for a migration from Bitbucket Server - GitHub Docs
+3rd page
+Skip to main content
+GitHub Docs
+
+Migrations/GitHub Enterprise Importer/Migrate from Bitbucket Server/Migrate repositories
+Migrating repositories from Bitbucket Server to GitHub Enterprise Cloud
+You can migrate repositories from Bitbucket Server to GitHub Enterprise Cloud using the GitHub CLI.
+
+In this article
+About repository migrations with GitHub Enterprise Importer
+You can migrate individual repositories or all repositories from a BitBucket Server instance using GitHub CLI.
+
+At this time, migrating from Bitbucket Server with the GitHub API is not supported.
+
+Prerequisites
+We strongly recommend that you perform a trial run of your migration and complete your production migration soon after. To learn more about trial runs, see Overview of a migration from Bitbucket Server to GitHub Enterprise Cloud.
+Ensure you understand the data that will be migrated and the known support limitations of the Importer. For more information, see About migrations from Bitbucket Server to GitHub Enterprise Cloud.
+While not required, we recommend halting work during your production migration. The Importer doesn't support delta migrations, so any changes that happen during the migration will not migrate. If you choose not to halt work during your production migration, you'll need to manually migrate these changes.
+For the destination organization on GitHub.com, you must be an organization owner or have the migrator role. For more information, see Managing access for a migration from Bitbucket Server.
+You need the username and password for a Bitbucket Server account with admin or super admin permissions.
+Step 1: Install the BBS2GH extension of the GitHub CLI
+If this is your first migration, you'll need to install the BBS2GH extension of the GitHub CLI. For more information about GitHub CLI, see About GitHub CLI.
+
+Alternatively, you can download a standalone binary from the releases page for the github/gh-bbs2gh repository. You can run this binary directly, without the gh prefix.
+
+Install the GitHub CLI. For installation instructions for GitHub CLI, see the GitHub CLI repository.
+
+Note
+
+You need version 2.4.0 or newer of GitHub CLI. You can check the version you have installed with the gh --version command.
+
+Install the BBS2GH extension.
+
+Shell
+gh extension install github/gh-bbs2gh
+Any time you need help with the BBS2GH extension, you can use the --help flag with a command. For example, gh bbs2gh --help will list all the available commands, and gh bbs2gh migrate-repo --help will list all the options available for the migrate-repo command.
+
+Step 2: Update the BBS2GH extension of the GitHub CLI
+The BBS2GH extension of the GitHub CLI is updated weekly. To make sure you're using the latest version, update the extension.
+
+Shell
+gh extension upgrade github/gh-bbs2gh
+Step 3: Set environment variables
+Before you can use the BBS2GH extension to migrate to GitHub Enterprise Cloud, you must create a personal access token that can access the destination organization, then set the personal access token as an environment variable.
+
+You'll also need to set environment variables for your Bitbucket Server username and password and, if your Bitbucket Server instance runs on Windows, your SMB password.
+
+Create and record a personal access token (classic) that will authenticate for the destination organization on GitHub Enterprise Cloud, making sure that the token meets all requirements. For more information, see Managing access for a migration from Bitbucket Server.
+
+Set environment variables, replacing TOKEN with the personal access token you recorded above, USERNAME with the username of a Bitbucket Server account that has admin or super admin permissions, and PASSWORD with the password for the Bitbucket Server account.
+
+If you're using Terminal, use the export command.
+
+Shell
+export GH_PAT="TOKEN"
+export BBS_USERNAME="USERNAME"
+export BBS_PASSWORD="PASSWORD"
+# If your Bitbucket Server instance runs on Windows
+export SMB_PASSWORD="PASSWORD"
+If you're using PowerShell, use the $env command.
+
+Shell
+$env:GH_PAT="TOKEN"
+$env:BBS_USERNAME="USERNAME"
+$env:BBS_PASSWORD="PASSWORD"
+# If your Bitbucket Server instance runs on Windows
+$env:SMB_PASSWORD="PASSWORD"
+If you're migrating to GitHub Enterprise Cloud with data residency, for convenience, set an environment variable for the base API URL for your enterprise.
+
+If you're using Terminal, use the export command.
+
+Shell
+export TARGET_API_URL="https://api.SUBDOMAIN.ghe.com"
+If you're using PowerShell, use the $env command.
+
+Shell
+$env:TARGET_API_URL="https://api.SUBDOMAIN.ghe.com"
+Important
+
+Ensure to replace SUBDOMAIN with your enterprise's subdomain.
+
+For example, if your enterprise's subdomain is acme, the TARGET_API_URL value would be https://api.acme.ghe.com.
+
+You'll use this variable with the --target-api-url option in commands you run with the GitHub CLI.
+
+Step 4: Set up blob storage
+Because many Bitbucket Server instances sit behind firewalls, the GitHub CLI uses blob storage as an intermediate location to store your data that is reachable from the internet.
+
+You will first generate an archive of the data you want to migrate and push the data to blob storage from behind your firewall.
+
+The GitHub CLI supports the following blob storage providers:
+
+Amazon Web Services (AWS) S3
+Azure Blob Storage
+Before you can run a migration, you need to set up a storage container with your chosen cloud provider to store your data.
+
+Using GitHub-owned blob storage
+If you do not want to set up and provide GitHub Enterprise Importer with access to a blob storage account behind your firewall, you can migrate repositories with GitHub-owned blob storage using the --use-github-storage flag. To do so, you must be running v1.9.0 (or higher) of BBS2GH extension of the GitHub CLI.
+
+For security purposes, GitHub-owned blob storage is explicitly write-only, and downloads from GitHub-owned blob storage are not possible. After a migration is complete, the repository archives are immediately deleted. If an archive is uploaded and not used in a migration, the archive is deleted after 7 days.
+
+Setting up an AWS S3 storage bucket
+In AWS, set up a S3 bucket. For more information, see Creating a bucket in the AWS documentation.
+
+You will also need an AWS access key and secret key with the following permissions:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucketMultipartUploads",
+                "s3:AbortMultipartUpload",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:ListMultipartUploadParts"
+            ],
+            "Resource": [
+                "arn:aws:s3:::github-migration-bucket",
+                "arn:aws:s3:::github-migration-bucket/*"
+            ]
+        }
+    ]
+}
+Note
+
+GitHub Enterprise Importer does not delete your archive from AWS after your migration is finished. To reduce storage costs, we recommend configuring auto-deletion of your archive after a period of time. For more information, see Setting lifecycle configuration on a bucket in the AWS documentation.
+
+When you're ready to run your migration, you will need to provide your AWS credentials to the GitHub CLI: region, access key, secret key, and session token (if required). You can pass them as arguments, or set environment variables called AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN.
+
+You will also need to pass in the name of the S3 bucket using the --aws-bucket-name argument.
+
+Setting up an Azure Blob Storage storage account
+In Azure, create a storage account and make a note of your connection string. For more information, see Manage storage account access keys in Microsoft Docs.
+
+Note
+
+GitHub Enterprise Importer does not delete your archive from Azure Blob Storage after your migration is finished. To reduce storage costs, we recommend configuring auto-deletion of your archive after a period of time. For more information, see Optimize costs by automatically managing the data lifecycle in Microsoft Docs.
+
+When you're ready to run your migration, you can either pass your connection string into the GitHub CLI as an argument, or pass it in using an environment variable called AZURE_STORAGE_CONNECTION_STRING.
+
+Allowing network access
+If you have configured firewall rules on your storage account, ensure you have allowed access to the IP ranges for your migration destination. See Managing access for a migration from Bitbucket Server.
+
+Step 5: Migrate a repository
+You can migrate repositories with the gh bbs2gh migrate-repo command.
+
+When you migrate a repository, by default, the BBS2GH extension of the GitHub CLI performs the following steps:
+
+Connects to your Bitbucket Server instance and generates a migration archive per repository
+Downloads the migration archive from the Bitbucket Server instance to the machine where you're running the BBS2GH extension of the GitHub CLI, using SFTP (Linux) or SMB (Windows)
+Uploads the migration archives to the blob storage provider of your choice
+Starts your migration in GitHub Enterprise Cloud, using the URLs of the archives stored with your blob storage provider
+Deletes the migration archive from your local machine. (You'll need to delete the archive from your blob storage provider manually once the migration has finished.)
+Alternatively, you can use the GitHub CLI to generate the archive, download that archive manually, and then use the GitHub CLI to continue the migration.
+
+Allowing the GitHub CLI to download the migration archive
+Downloading the migration archive manually
+Allowing the GitHub CLI to download the migration archive
+To migrate a single repository, use the gh bbs2gh migrate-repo command.
+
+You must follow this step from a computer that can access:
+
+Your Bitbucket Server instance via HTTPS
+Your Bitbucket Server instance via SFTP, if your Bitbucket Server instance runs on Linux. In general, if you can access the server via SSH, then you can also use SFTP.
+Your Bitbucket Server instance via SMB, if your Bitbucket Server instance runs on Windows
+Your chosen blob storage provider
+Shell
+gh bbs2gh migrate-repo --bbs-server-url BBS-SERVER-URL \
+  --bbs-project PROJECT --bbs-repo CURRENT-NAME \
+  --github-org DESTINATION --github-repo NEW-NAME \
+  # If you are migrating to GHE.com:
+  --target-api-url TARGET-API-URL
+  # If your Bitbucket Server instance runs on Linux:
+  --ssh-user SSH-USER --ssh-private-key PATH-TO-KEY
+  # If your Bitbucket Server instance runs on Windows:
+  --smb-user SMB-USER
+  # If you are using AWS S3 as your blob storage provider:
+  --aws-bucket-name AWS-BUCKET-NAME
+  # If you are running a Bitbucket Data Center cluster or your Bitbucket Server is behind a load balancer:
+  --archive-download-host ARCHIVE-DOWNLOAD-HOST
+  # If you are using GitHub owned blob storage:
+  --use-github-storage
+Replace the placeholders in the command above with the following values.
+
+Placeholder	Value
+BBS-SERVER-URL	The URL for your Bitbucket Server instance
+PROJECT	The key for the Bitbucket Server project of the repository you want to migrate
+CURRENT-NAME	The name of the repository you want to migrate
+DESTINATION	Name of the destination organization
+NEW-NAME	The name you want the migrated repository to have
+TARGET-API-URL	The base API URL for your enterprise's subdomain of GHE.com. For example: https://api.octocorp.ghe.com.
+SSH-USER	If your Bitbucket Server instance runs on Linux, the username to use when connecting to your Bitbucket Server via SFTP
+PATH-TO-KEY	If your Bitbucket Server instance runs on Linux, the path to your SSH private key, such as ~/.ssh/id_rsa. For SSH key requirements, see Managing access for a migration from Bitbucket Server.
+SMB-USER	If your Bitbucket Server instance runs on Windows, the username to use when connecting to your Bitbucket Server via SMB
+AWS-BUCKET-NAME	The bucket name for your AWS S3 bucket
+ARCHIVE-DOWNLOAD-HOST	The host to use to connect to the Bitbucket Server/Data Center instance via SSH or SMB. You only need to specify this if you are running a Bitbucket Data Center cluster or your Bitbucket Server is behind a load balancer.
+Note
+
+If you get an error mentioning Renci.SshNet, then the CLI is having issues making an SFTP connection to your server to download your migration archive. For information about how to troubleshoot these issues, see Troubleshooting your migration with GitHub Enterprise Importer.
+
+Downloading the migration archive manually
+By default, the BBS2GH extension of the GitHub CLI performs the entire migration, including downloading the migration archive from the Bitbucket Server instance using SFTP or SMB.
+
+However, some customers prefer to download the migration archive manually, because their server does not offer SFTP access, for example. In that case, you can use the GitHub CLI to generate the archive, download that archive manually, and then use the GitHub CLI to continue the migration.
+
+You must follow this step from a computer that can access:
+
+Your Bitbucket Server instance via HTTPS
+Your chosen blob storage provider
+First, use the gh bbs2gh migrate-repo command with only the following arguments:
+
+Shell
+gh bbs2gh migrate-repo --bbs-server-url BBS-SERVER-URL \
+  --bbs-project PROJECT \
+  --bbs-repo CURRENT-NAME
+Replace the placeholders in the command above with the following values.
+
+Placeholder	Value
+BBS-SERVER-URL	The URL for your Bitbucket Server instance
+PROJECT	The key for the Bitbucket Server project of the repository you want to migrate
+CURRENT-NAME	The name of the repository you want to migrate
+Your migration archive will be generated, and its path will be printed in the command output:
+
+[12:14] [INFO] Export completed. Your migration archive should be ready on your
+instance at $BITBUCKET_SHARED_HOME/data/migration/export/Bitbucket_export_9.tar
+In general, $BITBUCKET_SHARED_HOME will be set to /var/atlassian/application-data/bitbucket/shared on Linux and C:\Atlassian\ApplicationData\Bitbucket\Shared on Windows, but this may differ depending on your server configuration. To help you identify your shared home directory, see Troubleshooting your migration with GitHub Enterprise Importer.
+
+Download the migration archive from your Bitbucket Server instance, and store the archive on the machine where you're running the GitHub CLI.
+
+To import your migration archive into GitHub, use the gh bbs2gh migrate-repo command again, with a different set of arguments:
+
+Shell
+gh bbs2gh migrate-repo --archive-path ARCHIVE-PATH \
+  --github-org DESTINATION --github-repo NEW-NAME \
+  --bbs-server-url BBS-SERVER-URL \
+  --bbs-project PROJECT \
+  --bbs-repo CURRENT-NAME \
+  # If you are using AWS S3 as your blob storage provider:
+  --aws-bucket-name AWS-BUCKET-NAME
+  # If you are migrating to GHE.com:
+  --target-api-url TARGET-API-URL
+Replace the placeholders in the command above with the following values.
+
+Placeholder	Value
+ARCHIVE-PATH	The path to the Bitbucket Server migration archive you downloaded from your instance
+DESTINATION	Name of the destination organization
+NEW-NAME	The name you want the migrated repository to have
+BBS-SERVER-URL	The URL for your Bitbucket Server instance
+PROJECT	The key for the Bitbucket Server project of the repository you want to migrate
+CURRENT-NAME	The name of the repository you want to migrate
+AWS-BUCKET-NAME	The bucket name for your AWS S3 bucket
+TARGET-API-URL	The base API URL for your enterprise's subdomain of GHE.com. For example: https://api.octocorp.ghe.com.
+Cancelling a migration
+If you want to cancel a migration, use the abort-migration command, replacing MIGRATION-ID with the ID returned from migrate-repo.
+
+Shell
+gh bbs2gh abort-migration --migration-id MIGRATION-ID
+Step 6: Validate your migration and check the error log
+When your migration is complete, we recommend reviewing your migration log. For more information, see Accessing your migration logs for GitHub Enterprise Importer.
+
+We recommend that you review your migrated repositories for a soundness check.
+
+Step 7: Migrate multiple repositories
+If you want to migrate multiple repositories to GitHub Enterprise Cloud at once, use the GitHub CLI to generate a migration script. The resulting script will contain a list of migration commands, one per repository.
+
+Note
+
+Generating a script outputs a PowerShell script. If you're using Terminal, you will need to output the script with the .ps1 file extension and install PowerShell for either Mac or Linux to run it.
+
+Generating a migration script
+You must follow this step from a computer that can access your Bitbucket Server instance via HTTPS.
+
+To generate a migration script, run the gh bbs2gh generate-script command.
+
+Shell
+gh bbs2gh generate-script --bbs-server-url BBS-SERVER-URL \
+  --github-org DESTINATION \
+  --output FILENAME \
+  # If you are migrating to GHE.com:
+  --target-api-url TARGET-API-URL
+  # If your Bitbucket Server instance runs on Linux:
+  --ssh-user SSH-USER --ssh-private-key PATH-TO-KEY
+  # If your Bitbucket Server instance runs on Windows:
+  --smb-user SMB-USER
+  # If you are running a Bitbucket Data Center cluster or your Bitbucket Server is behind a load balancer:
+  --archive-download-host ARCHIVE-DOWNLOAD-HOST
+  # If you are using GitHub owned blob storage:
+  --use-github-storage
+If you want the script to download the migration log for each migrated repository, add the --download-migration-logs flag. For more information about migration logs, see Accessing your migration logs for GitHub Enterprise Importer.
+
+Replace the placeholders in the command above with the following values.
+
+Placeholder	Value
+BBS-SERVER-URL	The URL for your Bitbucket Server instance
+DESTINATION	Name of the destination organization
+FILENAME	A filename for the resulting migration script
+
+If you're using Terminal, use a .ps1 file extension as the generated script requires PowerShell to run. You can install PowerShell for Mac or Linux.
+TARGET-API-URL	The base API URL for your enterprise's subdomain of GHE.com. For example: https://api.octocorp.ghe.com.
+SSH-USER	If your Bitbucket Server instance runs on Linux, the username to use when connecting to your Bitbucket Server via SFTP
+PATH-TO-KEY	If your Bitbucket Server instance runs on Linux, the path to your SSH private key, such as ~/.ssh/id_rsa. For SSH key requirements, see Managing access for a migration from Bitbucket Server.
+SMB-USER	If your Bitbucket Server instance runs on Windows, the username to use when connecting to your Bitbucket Server via SMB
+ARCHIVE-DOWNLOAD-HOST	The host to use to connect to the Bitbucket Server/Data Center instance via SSH or SMB. You only need to specify this if you are running a Bitbucket Data Center cluster or your Bitbucket Server is behind a load balancer.
+Reviewing the migration script
+After you generate the script, review the file and, optionally, edit the script.
+
+If there are any repositories you don't want to migrate, delete or comment out the corresponding lines.
+By default, repository names in GitHub will follow a projectKey-repositoryName convention. For example, a Bitbucket Server repository named airports that is part of the open-source project, which has the key OS, would be called OS-airports in GitHub. If you want any repositories to have a different name on GitHub, update the value for the corresponding --github-repo flag.
+If you downloaded BBS2GH as a standalone binary rather than as an extension for the GitHub CLI, you will need to update your generated script to run the binary instead of gh bbs2gh.
+
+Running your migration script
+To migrate your repositories, run the generated script.
+
+You must follow this step from a computer that can access:
+
+Your Bitbucket Server instance via HTTPS
+Your Bitbucket Server instance via SFTP, if your Bitbucket Server instance runs on Linux. In general, if you can access the server via SSH, then you can also use SFTP.
+Your Bitbucket Server instance via SMB, if your Bitbucket Server instance runs on Windows
+Your chosen blob storage provider
+Before running the script, you must set additional environment variables to authenticate to your blob storage provider.
+
+For AWS S3, set the following environment variables.
+AWS_ACCESS_KEY_ID: The access key id for your bucket
+AWS_SECRET_ACCESS_KEY: The secret key for your bucket
+AWS_REGION: The AWS region where your bucket is located
+AWS_SESSION_TOKEN: The session token, if you're using AWS temporary credentials (see Using temporary credentials with AWS resources in the AWS documentation)
+For Azure Blob Storage, set AZURE_STORAGE_CONNECTION_STRING to the connection string for your Azure storage account.
+Only connection strings using storage account access keys are supported. Connection strings which use shared access signatures (SAS) are not supported. For more information about storage account access keys, see Manage storage account access keys in the Azure documentation.
+
+To migrate multiple repositories, run the script you generated above. Replace FILENAME in the commands below with the filename you provided when generating the script.
+
+If you're using Terminal, use ./.
+
+Shell
+./FILENAME
+If you're using PowerShell, use .\.
+
+Shell
+.\FILENAME
+Help and support
+Did you find what you needed?
+
+Privacy policy
+Help us make these docs great!
+All GitHub docs are open source. See something that's wrong or unclear? Submit a pull request.
+
+Learn how to contribute
+
+Still need help?
+Ask the GitHub community
+Contact support
+Legal
+© 2026 GitHub, Inc.
+Terms
+Privacy
+Status
+Pricing
+Expert services
+Blog
+Migrating repositories from Bitbucket Server to GitHub Enterprise Cloud - GitHub Docs
+4th page
+analyze and explain easy way to how to step by step please
+i need to explain my manager and my team to how do it
+
